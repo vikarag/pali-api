@@ -7,11 +7,12 @@ import {
   searchFuzzy,
   browse,
 } from "../services/search-service.js";
+import { normalizePali } from "../utils/normalize.js";
 
 const router = Router();
 
 router.get("/search", (req, res) => {
-  const q = (req.query.q as string || "").trim();
+  const q = normalizePali((req.query.q as string || "").trim());
   const mode = (req.query.mode as string || "exact").toLowerCase();
   const pos = req.query.pos as string | undefined;
   const limit = Math.min(Math.max(parseInt(req.query.limit as string, 10) || 20, 1), 100);
@@ -60,7 +61,7 @@ router.get("/search", (req, res) => {
 });
 
 router.get("/browse", (req, res) => {
-  const letter = (req.query.letter as string || "a").trim();
+  const letter = normalizePali((req.query.letter as string || "a").trim());
   const pos = req.query.pos as string | undefined;
   const limit = Math.min(Math.max(parseInt(req.query.limit as string, 10) || 20, 1), 100);
   const offset = Math.max(parseInt(req.query.offset as string, 10) || 0, 0);

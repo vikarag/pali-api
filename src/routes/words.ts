@@ -11,6 +11,7 @@ import {
 } from "../services/word-service.js";
 import { getDeclension } from "../services/declension-service.js";
 import { getSuttasForWord } from "../services/sutta-service.js";
+import { normalizePali } from "../utils/normalize.js";
 
 const router = Router();
 
@@ -30,47 +31,47 @@ router.get("/words/id/:id", (req, res) => {
 });
 
 router.get("/words/:word/grammar", (req, res) => {
-  const results = getWordGrammar(decodeURIComponent(req.params.word));
+  const results = getWordGrammar(normalizePali(decodeURIComponent(req.params.word)));
   res.json({ query: req.params.word, results });
 });
 
 router.get("/words/:word/meanings", (req, res) => {
-  const results = getWordMeanings(decodeURIComponent(req.params.word));
+  const results = getWordMeanings(normalizePali(decodeURIComponent(req.params.word)));
   res.json({ query: req.params.word, results });
 });
 
 router.get("/words/:word/etymology", (req, res) => {
-  const results = getWordEtymology(decodeURIComponent(req.params.word));
+  const results = getWordEtymology(normalizePali(decodeURIComponent(req.params.word)));
   res.json({ query: req.params.word, results });
 });
 
 router.get("/words/:word/examples", (req, res) => {
-  const results = getWordExamples(decodeURIComponent(req.params.word));
+  const results = getWordExamples(normalizePali(decodeURIComponent(req.params.word)));
   res.json({ query: req.params.word, results });
 });
 
 router.get("/words/:word/related", (req, res) => {
-  const results = getWordRelated(decodeURIComponent(req.params.word));
+  const results = getWordRelated(normalizePali(decodeURIComponent(req.params.word)));
   res.json({ query: req.params.word, results });
 });
 
 router.get("/words/:word/construction", (req, res) => {
-  const results = getWordConstruction(decodeURIComponent(req.params.word));
+  const results = getWordConstruction(normalizePali(decodeURIComponent(req.params.word)));
   res.json({ query: req.params.word, results });
 });
 
 router.get("/words/:word/declension", (req, res) => {
-  const results = getDeclension(decodeURIComponent(req.params.word));
+  const results = getDeclension(normalizePali(decodeURIComponent(req.params.word)));
   res.json({ query: req.params.word, results });
 });
 
 router.get("/words/:word/suttas", (req, res) => {
-  const results = getSuttasForWord(decodeURIComponent(req.params.word));
+  const results = getSuttasForWord(normalizePali(decodeURIComponent(req.params.word)));
   res.json({ query: req.params.word, results });
 });
 
 router.get("/words/:word", (req, res) => {
-  const word = decodeURIComponent(req.params.word);
+  const word = normalizePali(decodeURIComponent(req.params.word));
   const results = lookupWord(word);
   if (results.length === 0) {
     res.status(404).json({ error: "Word not found", query: word });

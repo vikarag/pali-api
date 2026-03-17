@@ -243,6 +243,8 @@ Universal search endpoint with multiple modes.
 | `offset` | Pagination offset | `0` |
 | `pos` | Filter by part of speech | — |
 
+**Diacritical normalization:** The niggahīta characters `ṁ` (dot above) and `ṃ` (dot below) are treated as interchangeable across all endpoints. Searching for `dhammaṁ` returns the same results as `dhammaṃ`.
+
 **Search modes:**
 
 | Mode | Description | Example |

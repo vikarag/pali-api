@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { listRoots, getRootDetail } from "../services/root-service.js";
+import { normalizePali } from "../utils/normalize.js";
 
 const router = Router();
 
@@ -20,7 +21,7 @@ router.get("/roots", (req, res) => {
 });
 
 router.get("/roots/:root", (req, res) => {
-  const rootKey = decodeURIComponent(req.params.root);
+  const rootKey = normalizePali(decodeURIComponent(req.params.root));
   const result = getRootDetail(rootKey);
 
   if (!result.root) {
