@@ -16,10 +16,10 @@ const CASE_MAP: Record<string, string> = {
 };
 
 /**
- * Strip all HTML tags and return plain text.
+ * Strip HTML tags except <b>/<\/b>, which differentiate stem from ending.
  */
 function stripHtml(s: string): string {
-  return s.replace(/<[^>]+>/g, "").trim();
+  return s.replace(/<(?!\/?b>)[^>]+>/gi, "").trim();
 }
 
 /**
@@ -93,8 +93,7 @@ export function getDeclension(word: string): DeclensionTable[] {
       .prepare("SELECT inflections_html, pattern FROM dpd_headwords WHERE id = ?")
       .get(r.id) as unknown as { inflections_html: string; pattern: string } | undefined;
 
-    const html = row?.inflections_html || "";
-    const table = parseInflectionHtml(html);
+    const table = parseInflectionHtml(row?.inflections_html || "");
 
     return {
       lemma: r.lemma,
@@ -102,7 +101,6 @@ export function getDeclension(word: string): DeclensionTable[] {
       pattern: row?.pattern || "",
       inflections: r.inflections.list,
       table,
-      html,
     };
   });
 }

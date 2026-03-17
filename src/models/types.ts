@@ -109,7 +109,6 @@ export interface WordResult {
   }>;
   inflections: {
     list: string[];
-    html: string;
   };
   related: {
     synonyms: string[];
@@ -131,7 +130,6 @@ export interface WordResult {
   };
   frequency: {
     ebtCount: string;
-    html: string;
   };
   verb: {
     type: string;
@@ -150,7 +148,6 @@ export interface DeclensionTable {
   pattern: string;
   inflections: string[];
   table: Record<string, Record<string, string | string[]>>;
-  html: string;
 }
 
 export interface CompoundResult {

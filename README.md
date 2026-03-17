@@ -79,8 +79,7 @@ curl localhost:8080/api/words/dhamma
         }
       ],
       "inflections": {
-        "list": ["dhamma", "dhammo", "dhammā", "dhammāse", "dhammaṃ", "..."],
-        "html": "..."
+        "list": ["dhamma", "dhammo", "dhammā", "dhammāse", "dhammaṃ", "..."]
       },
       "related": {
         "synonyms": [],
@@ -100,7 +99,7 @@ curl localhost:8080/api/words/dhamma
         "compoundType": "",
         "compoundConstruction": ""
       },
-      "frequency": { "ebtCount": "", "html": "..." },
+      "frequency": { "ebtCount": "" },
       "verb": { "type": "", "trans": "", "neg": "", "plusCase": "" },
       "commentary": "",
       "notes": "",
@@ -168,7 +167,6 @@ curl localhost:8080/api/words/dhamma/declension
         "vocative": { "singular": ["dhamma", "dhammā"], "plural": "dhammā" },
         "in_compounds": { "singular": "dhamma" }
       },
-      "html": "..."
     }
   ]
 }

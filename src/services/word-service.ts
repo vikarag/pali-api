@@ -49,7 +49,6 @@ function toWordResult(row: DpdHeadword): WordResult {
     examples,
     inflections: {
       list: splitCsv(row.inflections),
-      html: row.inflections_html || "",
     },
     related: {
       synonyms: splitCsv(row.synonym),
@@ -77,7 +76,6 @@ function toWordResult(row: DpdHeadword): WordResult {
     },
     frequency: {
       ebtCount: row.ebt_count || "",
-      html: row.freq_html || "",
     },
     verb: {
       type: row.verb || "",
