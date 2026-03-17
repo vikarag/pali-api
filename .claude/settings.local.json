@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm init:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm setup:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx tsx:*)",
+      "Bash(pnpm rebuild:*)",
+      "Bash(pkill:*)",
+      "Bash(curl:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(git init:*)"
+    ]
+  }
+}

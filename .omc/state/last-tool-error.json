@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"pkill -f \\\"tsx src/index.ts\\\" 2>/dev/null; sleep 1; echo \\\"killed\\\"\",\"description\":\"Kill old server process\"}",
+  "error": "Exit code 144",
+  "timestamp": "2026-03-17T09:19:39.550Z",
+  "retry_count": 2
+}
