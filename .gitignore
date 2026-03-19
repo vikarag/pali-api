@@ -3,3 +3,5 @@ dist/
 data/
 .env
 *.tar.bz2
+.claude/
+.omc/

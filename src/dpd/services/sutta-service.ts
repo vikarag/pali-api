@@ -1,5 +1,5 @@
-import { getDb } from "../db/connection.js";
-import type { SuttaReference } from "../models/types.js";
+import { getDb } from "../../shared/db/connection.js";
+import type { SuttaReference } from "../../shared/models/types.js";
 
 interface SuttaInfo {
   source: string;

@@ -1,341 +1,317 @@
 # Pali API
 
-A self-hosted REST API server for the [Digital Pali Dictionary](https://digitalpalidictionary.github.io/) (DPD). Look up Pali words, search by English meaning, browse declension tables, deconstruct compounds, and cross-reference sutta citations — all from any device on your local network.
+A self-hosted REST API for Pali language analysis, powered by the [Digital Pali Dictionary](https://digitalpalidictionary.github.io/) (DPD).
 
-Powered by DPD's SQLite database (88,600+ headwords, 1.28M inflected forms, 753 roots) and Node.js 24's built-in `node:sqlite` module. No external database services required.
+Two services in one:
+
+- **`/dpd/`** — Dictionary lookup: words, inflections, declensions, compounds, roots, suttas, and full-text search
+- **`/analyzer/`** — Morphological analyzer: tokenize sentences, resolve sandhi, detect compounds, disambiguate grammar, and produce interlinear glosses
+
+Backed by DPD's SQLite database (88,600+ headwords, 1.28M inflected forms, 753 roots) and Node.js 24's built-in `node:sqlite` module. No external database services required.
+
+**Live API:** [api.paa.li](https://api.paa.li)
 
 ## Quick Start
 
 ```bash
 # Prerequisites: Node.js >= 24, pnpm
 
-# Install dependencies
 pnpm install
-
-# Download DPD database (~144MB download, ~1.9GB extracted) and build search indexes
-pnpm setup
-
-# Start the server
-pnpm dev
+pnpm setup     # Downloads DPD database (~144MB download, ~1.9GB extracted)
+pnpm dev       # Starts at http://0.0.0.0:8080
 ```
-
-The server starts at `http://0.0.0.0:8080` by default, accessible from any device on your LAN.
 
 ## Configuration
 
-Copy `.env.example` to `.env` and edit as needed:
+Copy `.env.example` to `.env`:
 
 ```env
-PORT=8080        # Server port
-HOST=0.0.0.0     # Bind address (0.0.0.0 = all interfaces)
-DB_PATH=./data/dpd.db  # Path to DPD database
+PORT=8080
+HOST=0.0.0.0
+DB_PATH=./data/dpd.db
 ```
 
-## API Reference
+---
 
-All endpoints are prefixed with `/api`. The root endpoint (`GET /`) returns a JSON index of all available endpoints.
+## Analyzer API — `/analyzer/`
 
-### Word Lookup
+The analyzer performs morphological analysis of Pali text. It tokenizes sentences, looks up inflected forms, resolves sandhi (phonological merging), detects compounds, and uses 17 disambiguation heuristics to rank the best grammatical reading.
 
-The primary use case. Accepts both headwords (`dhamma`) and inflected forms (`dhammassa`, `dhammesu`). Inflected forms are resolved to their headwords via DPD's lookup table.
+### `POST /analyzer/sentence`
 
-#### `GET /api/words/:word`
-
-Full dictionary entry with all available information.
+Full sentence analysis — the main endpoint. Tokenizes, analyzes each word, and applies sentence-level disambiguation.
 
 ```bash
-curl localhost:8080/api/words/dhamma
+curl -X POST https://api.paa.li/analyzer/sentence \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Naro ca devo ca gacchanti."}'
 ```
 
 ```json
 {
-  "query": "dhamma",
-  "results": [
+  "original": "Naro ca devo ca gacchanti.",
+  "tokens": [
     {
-      "id": 34626,
-      "lemma": "dhamma 1.01",
-      "pos": "masc",
-      "grammar": "masc, from dharati",
-      "meanings": {
-        "primary": "nature; character",
-        "literal": "",
-        "buddhadatta": "nature"
-      },
-      "etymology": {
-        "root": "√dhar 1",
-        "rootSign": "a",
-        "rootBase": "",
-        "derivedFrom": "dharati",
-        "sanskrit": "dharma [dhṛ]",
-        "cognate": "",
-        "nonIa": "",
-        "construction": "√dhar + ma"
-      },
-      "examples": [
-        {
-          "source": "SN22.97",
-          "sutta": "nakhasikhāsuttaṃ",
-          "text": "atthi nu kho bhante kiñci rūpaṃ..."
-        }
-      ],
-      "inflections": {
-        "list": ["dhamma", "dhammo", "dhammā", "dhammāse", "dhammaṃ", "..."]
-      },
-      "related": {
-        "synonyms": [],
-        "antonyms": [],
-        "variants": [],
-        "familyRoot": "dhar dhamma",
-        "familyWord": "dhamma",
-        "familyCompound": [],
-        "familyIdioms": [],
-        "familySet": []
-      },
-      "construction": {
-        "construction": "√dhar + ma",
-        "derivative": "kita",
-        "suffix": "ma",
-        "phonetic": "",
-        "compoundType": "",
-        "compoundConstruction": ""
-      },
-      "frequency": { "ebtCount": "" },
-      "verb": { "type": "", "trans": "", "neg": "", "plusCase": "" },
-      "commentary": "",
-      "notes": "",
-      "link": ""
-    }
+      "surface": "Naro",
+      "analyses": [{
+        "lemma": "nara",
+        "pos": "noun",
+        "inflection": "masc nom sg",
+        "tag": "[N.m.sg.nom]",
+        "gloss": "man; person"
+      }],
+      "isPunctuation": false,
+      "isSandhi": false,
+      "isCompound": false
+    },
+    {
+      "surface": "ca",
+      "analyses": [{
+        "lemma": "ca",
+        "pos": "ind",
+        "tag": "[Ind.conj]",
+        "gloss": "and"
+      }]
+    },
+    {
+      "surface": "devo",
+      "analyses": [{
+        "lemma": "deva",
+        "pos": "noun",
+        "inflection": "masc nom sg",
+        "tag": "[N.m.sg.nom]",
+        "gloss": "god; deity"
+      }]
+    },
+    {
+      "surface": "ca",
+      "analyses": [{ "tag": "[Ind.conj]" }]
+    },
+    {
+      "surface": "gacchanti",
+      "analyses": [{
+        "lemma": "gacchati",
+        "pos": "verb",
+        "inflection": "pr 3rd pl",
+        "tag": "[V.pres.act.3pl]",
+        "gloss": "goes; walks; moves"
+      }]
+    },
+    { "surface": ".", "isPunctuation": true }
   ]
 }
 ```
 
-Inflected forms resolve automatically:
+### `GET /analyzer/word/:word`
+
+Single-word analysis without sentence-level disambiguation. Returns all possible readings.
 
 ```bash
-curl localhost:8080/api/words/dhammassa   # genitive form → resolves to dhamma headwords
-curl localhost:8080/api/words/dhammesu    # locative plural → resolves to dhamma headwords
+curl https://api.paa.li/analyzer/word/dhammassa
 ```
 
-#### Sub-endpoints
+Returns analyses for all matching headwords (dative singular, genitive singular, etc.).
 
-Each returns a subset of the full entry:
+### `GET /analyzer/sandhi/:form`
 
-| Endpoint | Returns |
-|----------|---------|
-| `GET /api/words/:word/grammar` | Part of speech, grammatical description, verb type, transitivity |
-| `GET /api/words/:word/meanings` | Primary meaning, literal meaning, Buddhadatta's definition |
-| `GET /api/words/:word/etymology` | Root, Sanskrit cognate, English cognate, derivation, construction |
-| `GET /api/words/:word/examples` | Sutta citations with source, sutta name, and Pali text |
-| `GET /api/words/:word/related` | Synonyms, antonyms, variants, word families |
-| `GET /api/words/:word/construction` | Compound type, construction breakdown, derivative, suffix |
-
-#### `GET /api/words/id/:id`
-
-Direct lookup by DPD headword ID.
+Sandhi resolution only. Splits a merged form into its constituent words.
 
 ```bash
-curl localhost:8080/api/words/id/34626
-```
-
-### Declension Tables
-
-#### `GET /api/words/:word/declension`
-
-Returns structured declension/conjugation tables parsed from DPD's inflection data. Cases are broken down by singular and plural with all variant forms.
-
-```bash
-curl localhost:8080/api/words/dhamma/declension
+curl https://api.paa.li/analyzer/sandhi/tatrāyaṃ
 ```
 
 ```json
 {
-  "query": "dhamma",
-  "results": [
-    {
-      "lemma": "dhamma 1.01",
-      "pos": "masc",
-      "pattern": "a masc",
-      "inflections": ["dhamma", "dhammo", "dhammā", "..."],
-      "table": {
-        "nominative": { "singular": "dhammo", "plural": ["dhammā", "dhammāse"] },
-        "accusative": { "singular": "dhammaṃ", "plural": "dhamme" },
-        "instrumental": { "singular": ["dhammā", "dhammena"], "plural": ["dhammebhi", "dhammehi"] },
-        "dative": { "singular": ["dhammassa", "dhammāya"], "plural": "dhammānaṃ" },
-        "ablative": { "singular": ["dhammato", "dhammamhā", "dhammasmā", "dhammā"], "plural": ["dhammato", "dhammebhi", "dhammehi"] },
-        "genitive": { "singular": "dhammassa", "plural": ["dhammāna", "dhammānaṃ"] },
-        "locative": { "singular": ["dhammamhi", "dhammasmiṃ", "dhamme"], "plural": "dhammesu" },
-        "vocative": { "singular": ["dhamma", "dhammā"], "plural": "dhammā" },
-        "in_compounds": { "singular": "dhamma" }
-      },
-    }
+  "query": "tatrāyaṃ",
+  "original": "tatrāyaṃ",
+  "parts": ["tatra", "ayaṃ"],
+  "analyses": [
+    [{ "lemma": "tatra", "tag": "[Ind.spat]", "gloss": "there" }],
+    [{ "lemma": "ayaṃ", "tag": "[Pron.m.sg.nom]", "gloss": "this" }]
   ]
 }
 ```
 
-### Compound Deconstruction
+### `GET /analyzer/compound/:word`
 
-#### `GET /api/compounds/:word`
-
-Breaks compound words into their constituent parts with individual meanings.
+Compound analysis — identifies compound type and breaks it into components.
 
 ```bash
-curl localhost:8080/api/compounds/dhammacakka
+curl https://api.paa.li/analyzer/compound/dhammacakka
 ```
 
 ```json
 {
   "query": "dhammacakka",
-  "results": [
-    {
-      "word": "dhammacakka",
-      "isCompound": true,
-      "compoundType": "kammadhāraya",
-      "construction": "dhamma + cakka",
-      "compoundConstruction": "dhamma + cakka",
-      "components": [
-        { "word": "dhamma 1.01", "meaning": "nature; character", "pos": "masc" },
-        { "word": "cakka 1", "meaning": "wheel", "pos": "nt" }
-      ]
-    }
+  "compoundType": "Kammadhāraya",
+  "construction": "dhamma + cakka",
+  "components": [
+    ["dhamma", "adj", "of such nature"],
+    ["cakka", "adj", "having a wheel"]
   ]
 }
 ```
 
-### Sutta Cross-References
+### `GET /analyzer/tag`
 
-#### `GET /api/suttas`
-
-List all sutta sources referenced in the dictionary.
+Generate a textbook-style grammar tag from parameters.
 
 ```bash
-curl 'localhost:8080/api/suttas?limit=10'
+curl 'https://api.paa.li/analyzer/tag?pos=noun&inflection=masc+nom+sg&lemma=nara'
 ```
 
-#### `GET /api/suttas/:source`
+```json
+{ "tag": "[N.m.sg.nom]", "pos": "noun", "inflection": "masc nom sg", "lemma": "nara" }
+```
 
-Find all words that cite a specific sutta as an example.
+### Grammar Tag Format
+
+Tags follow textbook Pali grammar notation:
+
+| Tag | Meaning |
+|-----|---------|
+| `[N.m.sg.nom]` | Noun, masculine, singular, nominative |
+| `[N.f.pl.acc]` | Noun, feminine, plural, accusative |
+| `[V.pres.act.3sg]` | Verb, present tense, active voice, 3rd person singular |
+| `[V.aor.act.3pl]` | Verb, aorist, active voice, 3rd person plural |
+| `[PP.m.sg.nom]` | Past participle, masculine, singular, nominative |
+| `[Part.m.sg.nom]` | Present participle, masculine, singular, nominative |
+| `[FPP.m.sg.nom]` | Future passive participle |
+| `[Ger]` | Gerund / absolutive |
+| `[Inf]` | Infinitive |
+| `[Ind.conj]` | Indeclinable, conjunction |
+| `[Ind.neg]` | Indeclinable, negative particle |
+| `[Ind.emph]` | Indeclinable, emphatic particle |
+| `[Kammadh.n.sg.acc]` | Kammadhāraya compound, neuter, singular, accusative |
+
+### Disambiguation Heuristics
+
+When a word has multiple possible readings, the analyzer ranks them using:
+
+1. **Indeclinable priority** — particles (`ca`, `na`, `eva`) are preferred over rare noun readings
+2. **POS coherence** — avoids duplicate verb readings when another token is the verb
+3. **Verb-number agreement** — singular verb → prefer singular nominative for subject
+4. **Case governance** — verb's `+acc`/`+dat` boosts matching case readings
+5. **Transitivity** — transitive verbs boost accusative objects
+6. **Passive agent** — passive voice boosts instrumental readings
+7. **Gen/dat proximity** — genitive near nouns, dative near verbs
+8. **Position** — sentence-initial favors nominative
+9. **Frequency** — higher EBT corpus frequency ranks higher
+10. **Subject-predicate agreement** — PP/adj predicates agree with subject gender/number
+
+### Sandhi Resolution
+
+The analyzer resolves sandhi (phonological merging) using three strategies:
+
+1. **Deconstructor** — DPD's own sandhi split data (highest accuracy)
+2. **Particle stripping** — detects common suffixed particles (`-ti` → `iti`, `-pi` → `api`, `-va` → `eva`)
+3. **Rule-based engine** — reverses vowel sandhi, niggahīta assimilation, consonant gemination, and elision
+
+---
+
+## Dictionary API — `/dpd/`
+
+### Word Lookup
 
 ```bash
-curl localhost:8080/api/suttas/DN1    # All words with examples from Dīgha Nikāya 1
+curl https://api.paa.li/dpd/words/dhamma       # Headword lookup
+curl https://api.paa.li/dpd/words/dhammassa     # Inflected form → resolves to headwords
+curl https://api.paa.li/dpd/words/id/34626      # By ID
 ```
 
-#### `GET /api/words/:word/suttas`
+### Sub-endpoints
 
-All sutta references for a specific word.
-
-```bash
-curl localhost:8080/api/words/buddha/suttas
-```
+| Endpoint | Returns |
+|----------|---------|
+| `GET /dpd/words/:word/grammar` | POS, grammatical description, verb type |
+| `GET /dpd/words/:word/meanings` | Primary, literal, and Buddhadatta meanings |
+| `GET /dpd/words/:word/etymology` | Root, Sanskrit cognate, derivation, construction |
+| `GET /dpd/words/:word/examples` | Sutta citations with source and Pali text |
+| `GET /dpd/words/:word/related` | Synonyms, antonyms, variants, word families |
+| `GET /dpd/words/:word/construction` | Compound type, construction, derivative, suffix |
+| `GET /dpd/words/:word/declension` | Full declension/conjugation table |
+| `GET /dpd/words/:word/suttas` | All sutta references |
 
 ### Search
 
-#### `GET /api/search`
-
-Universal search endpoint with multiple modes.
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `q` | Search term (required) | — |
-| `mode` | Search mode (see below) | `exact` |
-| `limit` | Results per page (1-100) | `20` |
-| `offset` | Pagination offset | `0` |
-| `pos` | Filter by part of speech | — |
-
-**Diacritical normalization:** The niggahīta characters `ṁ` (dot above) and `ṃ` (dot below) are treated as interchangeable across all endpoints. Searching for `dhammaṁ` returns the same results as `dhammaṃ`.
-
-**Search modes:**
-
-| Mode | Description | Example |
-|------|-------------|---------|
-| `exact` | Match in the lookup table (handles inflected forms) | `?q=dhammassa&mode=exact` |
-| `prefix` | Headwords starting with the term | `?q=bodhi&mode=prefix` |
-| `fuzzy` | Approximate match using edit distance | `?q=dhama&mode=fuzzy` |
-| `english` | Full-text search across English meanings (FTS5) | `?q=suffering&mode=english` |
-| `root` | Find all words derived from a Pali root | `?q=√bhū&mode=root` |
-
 ```bash
-# Find Pali words meaning "suffering"
-curl 'localhost:8080/api/search?q=suffering&mode=english&limit=5'
-
-# Fuzzy match (typo-tolerant)
-curl 'localhost:8080/api/search?q=dhama&mode=fuzzy'
-
-# All verbs starting with "pa"
-curl 'localhost:8080/api/search?q=pa&mode=prefix&pos=pr&limit=10'
+curl 'https://api.paa.li/dpd/search?q=suffering&mode=english'  # English meaning search
+curl 'https://api.paa.li/dpd/search?q=bodhi&mode=prefix'       # Prefix match
+curl 'https://api.paa.li/dpd/search?q=dhama&mode=fuzzy'        # Fuzzy/typo-tolerant
+curl 'https://api.paa.li/dpd/search?q=√bhū&mode=root'          # By root
 ```
 
-### Roots
+| Mode | Description |
+|------|-------------|
+| `exact` | Exact match in lookup table (handles inflected forms) |
+| `prefix` | Headwords starting with the term |
+| `fuzzy` | Approximate match using edit distance |
+| `english` | Full-text search across English meanings (FTS5) |
+| `root` | All words derived from a Pali root |
 
-#### `GET /api/roots`
-
-List all 753 Pali roots with pagination.
-
-```bash
-curl 'localhost:8080/api/roots?limit=10'
-```
-
-#### `GET /api/roots/:root`
-
-Root details and all derived words. Accepts roots with or without the `√` prefix.
+### Compounds, Roots, Suttas
 
 ```bash
-curl 'localhost:8080/api/roots/√bhū'    # 438 derived words
-curl 'localhost:8080/api/roots/gam'      # also works without √
+curl https://api.paa.li/dpd/compounds/dhammacakka   # Compound deconstruction
+curl https://api.paa.li/dpd/roots                    # All 753 roots
+curl https://api.paa.li/dpd/roots/√bhū               # Root detail + derived words
+curl https://api.paa.li/dpd/suttas                   # All sutta sources
+curl https://api.paa.li/dpd/suttas/DN1               # Words citing a sutta
 ```
 
-### Browse
-
-#### `GET /api/browse`
-
-Browse the dictionary alphabetically.
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `letter` | Starting letter(s) | `a` |
-| `pos` | Filter by part of speech | — |
-| `limit` | Results per page (1-100) | `20` |
-| `offset` | Pagination offset | `0` |
+### Browse, Stats, Health
 
 ```bash
-curl 'localhost:8080/api/browse?letter=b&limit=10'
-curl 'localhost:8080/api/browse?letter=ni&pos=nt&limit=20'
+curl 'https://api.paa.li/dpd/browse?letter=b&limit=10'
+curl https://api.paa.li/dpd/health
+curl https://api.paa.li/dpd/stats
 ```
 
-### Stats & Health
+**Diacritical normalization:** `ṁ` (dot above) and `ṃ` (dot below) are treated as interchangeable across all endpoints.
 
-```bash
-curl localhost:8080/api/health   # Server status and DB counts
-curl localhost:8080/api/stats    # Detailed stats including part-of-speech distribution
-```
+---
 
 ## Project Structure
 
 ```
 pali-api/
-├── scripts/
-│   └── setup-db.ts           # Database download + FTS index builder
-├── data/
-│   └── dpd.db                # DPD SQLite database (gitignored)
 ├── src/
-│   ├── index.ts              # Express server entry point
-│   ├── config.ts             # Environment configuration
+│   ├── index.ts                    # Express server, route mounting
+│   ├── config.ts                   # Environment configuration
 │   ├── db/
-│   │   └── connection.ts     # SQLite connection (node:sqlite)
+│   │   └── connection.ts           # SQLite connection (node:sqlite)
 │   ├── models/
-│   │   └── types.ts          # TypeScript interfaces
-│   ├── services/
-│   │   ├── word-service.ts   # Word lookup + inflection resolution
-│   │   ├── search-service.ts # Search (exact, prefix, fuzzy, FTS, root)
-│   │   ├── root-service.ts   # Root queries
-│   │   ├── declension-service.ts  # Inflection table parser
-│   │   ├── compound-service.ts    # Compound deconstruction
-│   │   └── sutta-service.ts       # Sutta cross-references
-│   ├── routes/
-│   │   ├── words.ts, search.ts, roots.ts, compounds.ts, suttas.ts, health.ts
-│   │   └── index.ts          # Route aggregator
+│   │   └── types.ts                # All TypeScript interfaces
+│   ├── dpd/                        # Dictionary API (/dpd/)
+│   │   ├── routes/
+│   │   │   ├── index.ts            # DPD route aggregator
+│   │   │   ├── words.ts, search.ts, roots.ts, compounds.ts, suttas.ts, health.ts
+│   │   └── services/
+│   │       ├── word-service.ts     # Word lookup + inflection resolution
+│   │       ├── search-service.ts   # Multi-mode search
+│   │       ├── root-service.ts     # Root queries
+│   │       ├── declension-service.ts # Inflection table parser
+│   │       ├── compound-service.ts # Compound deconstruction (DPD)
+│   │       └── sutta-service.ts    # Sutta cross-references
+│   ├── analyzer/                   # Morphological Analyzer API (/analyzer/)
+│   │   ├── routes/
+│   │   │   └── index.ts            # /analyzer/* routes
+│   │   └── services/
+│   │       ├── analyzer-service.ts # Pipeline orchestrator
+│   │       ├── tokenizer.ts        # Sentence → WordToken[]
+│   │       ├── lookup-service.ts   # DB queries for analyzer
+│   │       ├── tagger.ts           # Grammar tag generation
+│   │       ├── sandhi-service.ts   # Deconstructor-based sandhi
+│   │       ├── sandhi-rules.ts     # Rule-based sandhi engine
+│   │       ├── compound-analyzer.ts # Compound detection
+│   │       └── disambiguator.ts    # 17 disambiguation heuristics
+│   ├── utils/
+│   │   └── normalize.ts            # Pali diacritical normalization
 │   └── middleware/
-│       ├── cors.ts           # CORS (enabled for all origins)
-│       └── error-handler.ts  # Global error handler
+│       ├── cors.ts
+│       └── error-handler.ts
+├── scripts/
+│   └── setup-db.ts                 # Database download + FTS index builder
 ├── package.json
 ├── tsconfig.json
 └── .env.example
@@ -343,11 +319,20 @@ pali-api/
 
 ## Tech Stack
 
-- **Runtime**: Node.js 24 with built-in `node:sqlite` (no native modules to compile)
-- **Language**: TypeScript
-- **Framework**: Express.js 5
-- **Database**: SQLite (DPD's own database, read-only)
-- **Search**: SQLite FTS5 for English meaning full-text search
+- **Runtime:** Node.js 24 with built-in `node:sqlite`
+- **Language:** TypeScript
+- **Framework:** Express.js 5
+- **Database:** SQLite (DPD's own database, read-only)
+- **Search:** SQLite FTS5 for English meaning full-text search
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm setup` | Download DPD database and build FTS5 search index |
+| `pnpm dev` | Start dev server with auto-reload |
+| `pnpm build` | Compile TypeScript to `dist/` |
+| `pnpm start` | Run compiled production build |
 
 ## Data Source
 
@@ -358,16 +343,6 @@ pali-api/
 - 753 roots
 - 5,026 sutta sources referenced
 - 25,917 compound words
-- Comprehensive grammar, etymology, inflection tables, and sutta citations
-
-## Scripts
-
-| Command | Description |
-|---------|-------------|
-| `pnpm setup` | Download DPD database and build FTS5 search index |
-| `pnpm dev` | Start dev server with auto-reload |
-| `pnpm build` | Compile TypeScript to `dist/` |
-| `pnpm start` | Run compiled production build |
 
 ## License
 

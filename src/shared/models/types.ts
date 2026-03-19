@@ -178,3 +178,48 @@ export interface PaginatedResponse<T> {
   offset: number;
   results: T[];
 }
+
+// ── Analyzer types ──────────────────────────────────────────────────────────
+
+export interface GrammarAnalysis {
+  lemma: string;
+  pos: string;
+  inflection: string;
+  tag: string;
+  gloss: string;
+  headwordId: number | null;
+  ebtCount: number;
+  compoundType: string;
+  compoundConstruction: string;
+  trans: string;
+  plusCase: string;
+  _origRank?: number;
+}
+
+export interface SandhiSplit {
+  original: string;
+  parts: string[];
+  analyses: GrammarAnalysis[][];
+}
+
+export interface CompoundInfo {
+  compoundType: string;
+  construction: string;
+  components: Array<[string, string, string]>;
+}
+
+export interface WordToken {
+  surface: string;
+  analyses: GrammarAnalysis[];
+  sandhi: SandhiSplit | null;
+  compound: CompoundInfo | null;
+  isPunctuation: boolean;
+  isSandhi: boolean;
+  isCompound: boolean;
+  ambiguous: boolean;
+}
+
+export interface AnalyzedSentence {
+  original: string;
+  tokens: WordToken[];
+}

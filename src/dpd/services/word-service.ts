@@ -1,5 +1,5 @@
-import { getDb } from "../db/connection.js";
-import type { DpdHeadword, WordResult } from "../models/types.js";
+import { getDb } from "../../shared/db/connection.js";
+import type { DpdHeadword, WordResult } from "../../shared/models/types.js";
 
 function splitCsv(val: string): string[] {
   if (!val) return [];

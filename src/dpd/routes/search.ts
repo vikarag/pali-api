@@ -7,7 +7,7 @@ import {
   searchFuzzy,
   browse,
 } from "../services/search-service.js";
-import { normalizePali } from "../utils/normalize.js";
+import { normalizePali } from "../../shared/utils/normalize.js";
 
 const router = Router();
 

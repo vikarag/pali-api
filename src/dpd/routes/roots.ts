@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { listRoots, getRootDetail } from "../services/root-service.js";
-import { normalizePali } from "../utils/normalize.js";
+import { normalizePali } from "../../shared/utils/normalize.js";
 
 const router = Router();
 

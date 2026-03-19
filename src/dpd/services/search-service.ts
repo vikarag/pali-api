@@ -1,5 +1,5 @@
-import { getDb } from "../db/connection.js";
-import type { DpdHeadword } from "../models/types.js";
+import { getDb } from "../../shared/db/connection.js";
+import type { DpdHeadword } from "../../shared/models/types.js";
 
 interface SearchOptions {
   limit: number;

@@ -1,5 +1,5 @@
-import { getDb } from "../db/connection.js";
-import type { DeclensionTable } from "../models/types.js";
+import { getDb } from "../../shared/db/connection.js";
+import type { DeclensionTable } from "../../shared/models/types.js";
 import { lookupWord } from "./word-service.js";
 
 // Map abbreviated case names to full names

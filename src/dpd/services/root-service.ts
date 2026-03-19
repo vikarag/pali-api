@@ -1,5 +1,5 @@
-import { getDb } from "../db/connection.js";
-import type { DpdRoot } from "../models/types.js";
+import { getDb } from "../../shared/db/connection.js";
+import type { DpdRoot } from "../../shared/models/types.js";
 
 interface RootResult {
   root: string;

@@ -11,7 +11,7 @@ import {
 } from "../services/word-service.js";
 import { getDeclension } from "../services/declension-service.js";
 import { getSuttasForWord } from "../services/sutta-service.js";
-import { normalizePali } from "../utils/normalize.js";
+import { normalizePali } from "../../shared/utils/normalize.js";
 
 const router = Router();
 

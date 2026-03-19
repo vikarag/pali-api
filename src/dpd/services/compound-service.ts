@@ -1,5 +1,5 @@
-import { getDb } from "../db/connection.js";
-import type { CompoundResult } from "../models/types.js";
+import { getDb } from "../../shared/db/connection.js";
+import type { CompoundResult } from "../../shared/models/types.js";
 import { lookupWord } from "./word-service.js";
 
 export function deconstructCompound(word: string): CompoundResult[] {
