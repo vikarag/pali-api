@@ -7,8 +7,14 @@ import {
 } from "../services/analyzer-service.js";
 import { makeTag, makeCompoundTag } from "../services/tagger.js";
 import { normalizePali } from "../../shared/utils/normalize.js";
+import { demoHtml } from "./demo.js";
 
 const router = Router();
+
+// GET /demo — interactive analyzer UI
+router.get("/demo", (_req, res) => {
+  res.type("html").send(demoHtml);
+});
 
 // POST /sentence — full sentence analysis
 router.post("/sentence", (req, res) => {

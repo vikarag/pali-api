@@ -14,6 +14,7 @@ import {
 } from "./sandhi-service.js";
 import { tryRuleBasedSplit } from "./sandhi-rules.js";
 import { analyzeCompound } from "./compound-analyzer.js";
+import { decomposeCompound } from "./compound-decomposer.js";
 import { disambiguate } from "./disambiguator.js";
 import { makeTag, makeCompoundTag } from "./tagger.js";
 import { normalizePali } from "../../shared/utils/normalize.js";
@@ -58,9 +59,10 @@ export function analyzeCompoundOnly(word: string): CompoundInfo | null {
   const data = lookupForm(word);
 
   if (data.headwords.length) {
-    return analyzeCompound(data.headwords);
+    const result = analyzeCompound(data.headwords);
+    if (result) return result;
   }
-  return null;
+  return decomposeCompound(word);
 }
 
 function analyzeToken(token: WordToken): void {
@@ -98,6 +100,31 @@ function analyzeToken(token: WordToken): void {
         token.isSandhi = true;
         token.sandhi = ruleSandhi;
         promoteSandhiToToken(token);
+      } else {
+        // Recursive compound decomposition as last resort
+        const decomposed = decomposeCompound(formLower);
+        if (decomposed) {
+          token.isCompound = true;
+          token.compound = decomposed;
+          const glossParts = decomposed.components
+            .map((c) => c[2])
+            .filter(Boolean);
+          token.analyses = [
+            {
+              lemma: decomposed.components.map((c) => c[0]).join(" + "),
+              pos: "compound",
+              inflection: "",
+              tag: "[Compound]",
+              gloss: glossParts.join(" + "),
+              headwordId: null,
+              ebtCount: 0,
+              compoundType: decomposed.compoundType,
+              compoundConstruction: decomposed.construction,
+              trans: "",
+              plusCase: "",
+            },
+          ];
+        }
       }
     }
   } else if (!grammar.length && headwordIds.length) {
