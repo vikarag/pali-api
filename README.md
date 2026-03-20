@@ -232,6 +232,79 @@ curl https://api.paa.li/dpd/words/id/34626      # By ID
 | `GET /dpd/words/:word/declension` | Full declension/conjugation table |
 | `GET /dpd/words/:word/suttas` | All sutta references |
 
+### Verb Conjugation
+
+Returns a structured conjugation table for verb entries, organized by tense → person → number. Accepts both headwords and inflected forms.
+
+```bash
+curl https://api.paa.li/dpd/verb/gacchati      # Headword
+curl https://api.paa.li/dpd/verb/gacchanti      # Inflected form → resolves to headword
+```
+
+```json
+{
+  "query": "gacchati",
+  "results": [
+    {
+      "id": 12345,
+      "lemma": "gacchati",
+      "pos": "pr",
+      "grammar": "...",
+      "meaning": "goes; walks",
+      "pattern": "ati pr",
+      "conjugation": {
+        "present": {
+          "third": { "singular": "gacch<b>ati</b>", "plural": "gacch<b>anti</b>" },
+          "second": { "singular": "gacch<b>asi</b>", "plural": "gacch<b>atha</b>" },
+          "first": { "singular": "gacch<b>āmi</b>", "plural": "gacch<b>āma</b>" }
+        },
+        "imperative": { ... },
+        "optative": { ... }
+      }
+    }
+  ]
+}
+```
+
+Non-verb words return 404: `GET /dpd/verb/dhamma` → `{ "error": "No verb entries found" }`
+
+### Noun Declension
+
+Returns a structured declension table for noun/adjective entries, organized by case → number. Accepts headwords and inflected forms.
+
+```bash
+curl https://api.paa.li/dpd/noun/dhamma         # Headword
+curl https://api.paa.li/dpd/noun/dhammassa       # Inflected form → resolves to headword
+```
+
+```json
+{
+  "query": "dhamma",
+  "results": [
+    {
+      "id": 34626,
+      "lemma": "dhamma",
+      "pos": "masc",
+      "grammar": "...",
+      "meaning": "teaching; nature; ...",
+      "pattern": "a masc",
+      "declension": {
+        "nominative": { "singular": "dhamm<b>o</b>", "plural": ["dhamm<b>ā</b>", "dhamm<b>āse</b>"] },
+        "accusative": { "singular": "dhamm<b>aṃ</b>", "plural": "dhamm<b>e</b>" },
+        "instrumental": { ... },
+        "dative": { ... },
+        "ablative": { ... },
+        "genitive": { ... },
+        "locative": { ... },
+        "vocative": { ... }
+      }
+    }
+  ]
+}
+```
+
+Non-noun words return 404: `GET /dpd/noun/gacchati` → `{ "error": "No noun entries found" }`
+
 ### Search
 
 ```bash
@@ -254,10 +327,12 @@ curl 'https://api.paa.li/dpd/search?q=√bhū&mode=root'          # By root
 ```bash
 curl https://api.paa.li/dpd/compounds/dhammacakka   # Compound deconstruction
 curl https://api.paa.li/dpd/roots                    # All 753 roots
-curl https://api.paa.li/dpd/roots/√bhū               # Root detail + derived words
+curl https://api.paa.li/dpd/roots/√bhū               # Root detail + derived words + categorized
 curl https://api.paa.li/dpd/suttas                   # All sutta sources
 curl https://api.paa.li/dpd/suttas/DN1               # Words citing a sutta
 ```
+
+The root detail endpoint (`/dpd/roots/:root`) includes a `categorized` field that groups derived words by POS category (verbs, nouns, adjectives, participles, indeclinables, other) with counts.
 
 ### Browse, Stats, Health
 

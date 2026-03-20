@@ -79,6 +79,8 @@ app.get("/dpd", (_req, res) => {
       related: "/dpd/words/:word/related",
       construction: "/dpd/words/:word/construction",
       declension: "/dpd/words/:word/declension",
+      verb: "/dpd/verb/:word",
+      noun: "/dpd/noun/:word",
       suttasForWord: "/dpd/words/:word/suttas",
       search: "/dpd/search?q=<term>&mode=<exact|prefix|fuzzy|english|root>",
       browse: "/dpd/browse?letter=<letter>",

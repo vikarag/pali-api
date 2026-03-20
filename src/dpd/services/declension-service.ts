@@ -18,7 +18,7 @@ const CASE_MAP: Record<string, string> = {
 /**
  * Strip HTML tags except <b>/<\/b>, which differentiate stem from ending.
  */
-function stripHtml(s: string): string {
+export function stripHtml(s: string): string {
   return s.replace(/<(?!\/?b>)[^>]+>/gi, "").trim();
 }
 
@@ -26,7 +26,7 @@ function stripHtml(s: string): string {
  * Parse a cell's HTML content into an array of forms.
  * Forms in DPD are separated by <br> tags.
  */
-function parseCellForms(cellHtml: string): string[] {
+export function parseCellForms(cellHtml: string): string[] {
   return cellHtml
     .split(/<br\s*\/?>/)
     .map(stripHtml)
@@ -39,7 +39,7 @@ function parseCellForms(cellHtml: string): string[] {
  * HTML format:
  *   <tr><th>nom</th><td>dhamm<b>o</b></td><td>dhamm<b>ā</b><br>dhamm<b>āse</b></td></tr>
  */
-function parseInflectionHtml(
+export function parseInflectionHtml(
   html: string
 ): Record<string, Record<string, string | string[]>> {
   const table: Record<string, Record<string, string | string[]>> = {};
